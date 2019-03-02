@@ -87,10 +87,6 @@ def accuracy(output, target, topk=(1,)):
     return res
 
 def train(model:nn.Module, optim:torch.optim.Optimizer, criterion:nn.Module, loader:DataLoader):
-    losses = AverageMeter()
-    top1 = AverageMeter()
-    top5 = AverageMeter()
-
     def train_epoch():
         model.train()
         for i, (x,y) in enumerate(tqdm(loader)):
@@ -117,6 +113,9 @@ def train(model:nn.Module, optim:torch.optim.Optimizer, criterion:nn.Module, loa
                     epoch, i, len(train_loader), loss=losses, top1=top1, top5=top5))
 
     for epoch in range(args.epochs):
+        losses = AverageMeter()
+        top1 = AverageMeter()
+        top5 = AverageMeter()
         train_epoch()
         validate(model, criterion, val_loader)
 
