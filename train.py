@@ -4,6 +4,7 @@ from torch.utils.data import DataLoader
 from torchvision import models, datasets, transforms
 
 import argparse
+from tqdm import tqdm
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--lr', type=float, default=1e-3)
@@ -78,7 +79,7 @@ def accuracy(output, target, topk=(1,)):
 
 def train_epoch(epoch:int, model:nn.Module, optim:torch.optim.Optimizer, criterion:nn.Module, loader:DataLoader):
     model.train()
-    for i, (x,y) in enumerate(loader):
+    for i, (x,y) in enumerate(tqdm(loader)):
         x,y = x.to(args.device), y.to(args.device)
         pred = model(x)
         loss = criterion(pred, y)
