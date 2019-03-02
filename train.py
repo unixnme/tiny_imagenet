@@ -38,6 +38,19 @@ train_loader = DataLoader(train_set,
                           num_workers=args.workers,
                           pin_memory=True)
 
+val_set = datasets.ImageFolder(args.val_dir,
+                                transforms.Compose([
+                                    transforms.Resize(224),
+                                    transforms.ToTensor(),
+                                    normalize,
+                                ]))
+
+val_loader = DataLoader(val_set,
+                          batch_size=args.batch_size,
+                          shuffle=True,
+                          num_workers=args.workers,
+                          pin_memory=True)
+
 criterion = nn.CrossEntropyLoss().to(args.device)
 
 class AverageMeter(object):
@@ -57,10 +70,6 @@ class AverageMeter(object):
         self.count += n
         self.avg = self.sum / self.count
 
-losses = AverageMeter()
-top1 = AverageMeter()
-top5 = AverageMeter()
-
 def accuracy(output, target, topk=(1,)):
     """Computes the accuracy over the k top predictions for the specified values of k"""
     with torch.no_grad():
@@ -77,30 +86,59 @@ def accuracy(output, target, topk=(1,)):
             res.append(correct_k.mul_(100.0 / batch_size))
     return res
 
-def train_epoch(epoch:int, model:nn.Module, optim:torch.optim.Optimizer, criterion:nn.Module, loader:DataLoader):
-    model.train()
-    for i, (x,y) in enumerate(tqdm(loader)):
-        x,y = x.to(args.device), y.to(args.device)
-        pred = model(x)
-        loss = criterion(pred, y)
+def train(model:nn.Module, optim:torch.optim.Optimizer, criterion:nn.Module, loader:DataLoader):
+    losses = AverageMeter()
+    top1 = AverageMeter()
+    top5 = AverageMeter()
 
-        # measure accuracy and record loss
-        acc1, acc5 = accuracy(pred, y, topk=(1, 5))
-        losses.update(loss.item(), x.size(0))
-        top1.update(acc1[0], x.size(0))
-        top5.update(acc5[0], x.size(0))
+    def train_epoch():
+        model.train()
+        for i, (x,y) in enumerate(tqdm(loader)):
+            x,y = x.to(args.device), y.to(args.device)
+            pred = model(x)
+            loss = criterion(pred, y)
 
-        # compute gradient and do SGD step
-        optim.zero_grad()
-        loss.backward()
-        optim.step()
+            # measure accuracy and record loss
+            acc1, acc5 = accuracy(pred, y, topk=(1, 5))
+            losses.update(loss.item(), x.size(0))
+            top1.update(acc1[0], x.size(0))
+            top5.update(acc5[0], x.size(0))
 
-        if i % args.print_freq == 0:
-            print('Epoch: [{0}][{1}/{2}]\t'
-                  'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                  'Acc@1 {top1.val:.3f} ({top1.avg:.3f})\t'
-                  'Acc@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
-                epoch, i, len(train_loader), loss=losses, top1=top1, top5=top5))
+            # compute gradient and do SGD step
+            optim.zero_grad()
+            loss.backward()
+            optim.step()
 
-for epoch in range(args.epochs):
-    train_epoch(epoch, model, optim, criterion, train_loader)
+            if i % args.print_freq == 0:
+                print('Epoch: [{0}][{1}/{2}]\t'
+                      'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
+                      'Acc@1 {top1.val:.3f} ({top1.avg:.3f})\t'
+                      'Acc@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
+                    epoch, i, len(train_loader), loss=losses, top1=top1, top5=top5))
+
+    for epoch in range(args.epochs):
+        train_epoch()
+        validate(model, criterion, val_loader)
+
+def validate(model:nn.Module, criterion:nn.Module, loader:DataLoader):
+    losses = AverageMeter()
+    top1 = AverageMeter()
+    top5 = AverageMeter()
+
+    model.eval()
+    with torch.no_grad():
+        for i, (x, y) in enumerate(loader):
+            x, y = x.to(args.device), y.to(args.device)
+            pred = model(x)
+            loss = criterion(pred, y)
+
+            # measure accuracy and record loss
+            acc1, acc5 = accuracy(pred, y, topk=(1, 5))
+            losses.update(loss.item(), x.size(0))
+            top1.update(acc1[0], x.size(0))
+            top5.update(acc5[0], x.size(0))
+
+        print(' * Loss {loss.val:.4f} Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'
+              .format(loss=losses, top1=top1, top5=top5))
+
+train(model, optim, criterion, train_loader)
