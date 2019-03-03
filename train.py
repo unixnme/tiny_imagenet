@@ -5,6 +5,7 @@ from torchvision import models, datasets, transforms
 
 import argparse
 from tqdm import tqdm
+from logger import Logger
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--lr', type=float, default=1e-3)
@@ -27,7 +28,7 @@ normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
 
 train_set = datasets.ImageFolder(args.train_dir,
                                 transforms.Compose([
-                                    transforms.Resize(224),
+                                    transforms.RandomResizedCrop(224, (.64, 1)),
                                     transforms.RandomHorizontalFlip(),
                                     transforms.ToTensor(),
                                     normalize,
@@ -53,6 +54,9 @@ val_loader = DataLoader(val_set,
                           pin_memory=True)
 
 criterion = nn.CrossEntropyLoss().to(args.device)
+keys = ["train_loss", "train_acc1", "train_acc5"]
+keys += ["val_loss", "val_acc1", "val_acc5"]
+logger = Logger(keys)
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
@@ -87,7 +91,7 @@ def accuracy(output, target, topk=(1,)):
             res.append(correct_k.mul_(100.0 / batch_size))
     return res
 
-def train(model:nn.Module, optim:torch.optim.Optimizer, criterion:nn.Module, loader:DataLoader):
+def train_and_val(model:nn.Module, optim:torch.optim.Optimizer, criterion:nn.Module, loader:DataLoader):
     def train_epoch():
         model.train()
         for i, (x,y) in enumerate(tqdm(loader)):
@@ -112,6 +116,11 @@ def train(model:nn.Module, optim:torch.optim.Optimizer, criterion:nn.Module, loa
                       'Acc@1 {top1.val:.3f} ({top1.avg:.3f})\t'
                       'Acc@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
                     epoch, i, len(train_loader), loss=losses, top1=top1, top5=top5))
+
+            logger.record('train_loss', loss.item())
+            logger.record('train_acc1', acc1[0].item())
+            logger.record('train_acc5', acc5[0].item())
+            logger.increment_iteration()
 
     for epoch in range(args.epochs):
         losses = AverageMeter()
@@ -138,7 +147,12 @@ def validate(model:nn.Module, criterion:nn.Module, loader:DataLoader):
             top1.update(acc1[0], x.size(0))
             top5.update(acc5[0], x.size(0))
 
-        print(' * Loss {loss.val:.4f} Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'
+        print(' * Loss {loss.avg:.4f} Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'
               .format(loss=losses, top1=top1, top5=top5))
 
-train(model, optim, criterion, train_loader)
+        logger.record('val_loss', losses.avg)
+        logger.record('val_acc1', top1.avg)
+        logger.record('val_acc5', top5.avg)
+
+train_and_val(model, optim, criterion, train_loader)
+logger.save('train_mode.txt')
