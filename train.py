@@ -93,7 +93,7 @@ def accuracy(output, target, topk=(1,)):
 
 def train_and_val(model:nn.Module, optim:torch.optim.Optimizer, criterion:nn.Module, loader:DataLoader):
     def train_epoch():
-        model.train()
+        model.train(False)
         for i, (x,y) in enumerate(tqdm(loader)):
             x,y = x.to(args.device), y.to(args.device)
             pred = model(x)
@@ -150,9 +150,10 @@ def validate(model:nn.Module, criterion:nn.Module, loader:DataLoader):
         print(' * Loss {loss.avg:.4f} Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'
               .format(loss=losses, top1=top1, top5=top5))
 
-        logger.record('val_loss', losses.avg)
-        logger.record('val_acc1', top1.avg)
-        logger.record('val_acc5', top5.avg)
+        logger.record('val_loss', float(losses.avg))
+        logger.record('val_acc1', float(top1.avg))
+        logger.record('val_acc5', float(top5.avg))
 
 train_and_val(model, optim, criterion, train_loader)
-logger.save('train_mode.txt')
+logger.save('eval_mode.txt')
+logger.plot()
