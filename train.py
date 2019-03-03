@@ -28,7 +28,7 @@ normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
 
 train_set = datasets.ImageFolder(args.train_dir,
                                 transforms.Compose([
-                                    transforms.RandomResizedCrop(224, (.64, 1)),
+                                    transforms.RandomResizedCrop(224, scale=[.64,1]),
                                     transforms.RandomHorizontalFlip(),
                                     transforms.ToTensor(),
                                     normalize,
