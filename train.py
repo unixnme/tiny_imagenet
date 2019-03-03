@@ -6,6 +6,7 @@ from torchvision import models, datasets, transforms
 import argparse
 from tqdm import tqdm
 from logger import Logger
+from datetime import datetime
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--lr', type=float, default=1e-3)
@@ -17,6 +18,7 @@ parser.add_argument('--workers', type=int, default=2)
 parser.add_argument('--epochs', type=int, default=100)
 parser.add_argument('--device', type=str, default='cpu')
 parser.add_argument('--print_freq', type=int, default=1000)
+parser.add_argument('--name', type=str, default=str(datetime.now()))
 
 args = parser.parse_args()
 
@@ -93,7 +95,7 @@ def accuracy(output, target, topk=(1,)):
 
 def train_and_val(model:nn.Module, optim:torch.optim.Optimizer, criterion:nn.Module, loader:DataLoader):
     def train_epoch():
-        model.train(False)
+        model.train()
         for i, (x,y) in enumerate(tqdm(loader)):
             x,y = x.to(args.device), y.to(args.device)
             pred = model(x)
@@ -155,5 +157,5 @@ def validate(model:nn.Module, criterion:nn.Module, loader:DataLoader):
         logger.record('val_acc5', float(top5.avg))
 
 train_and_val(model, optim, criterion, train_loader)
-logger.save('eval_mode.txt')
-logger.plot()
+logger.save(args.name)
+#logger.plot()
