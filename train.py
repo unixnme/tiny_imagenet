@@ -58,7 +58,7 @@ val_loader = DataLoader(val_set,
 criterion = nn.CrossEntropyLoss().to(args.device)
 keys = ["train_loss", "train_acc1", "train_acc5"]
 keys += ["val_loss", "val_acc1", "val_acc5"]
-logger = Logger(keys)
+logger = Logger(keys, args.name)
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
