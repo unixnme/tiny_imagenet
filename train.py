@@ -157,5 +157,3 @@ def validate(model:nn.Module, criterion:nn.Module, loader:DataLoader):
         logger.record('val_acc5', float(top5.avg))
 
 train_and_val(model, optim, criterion, train_loader)
-logger.save(args.name)
-#logger.plot()
