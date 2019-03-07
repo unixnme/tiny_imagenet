@@ -7,10 +7,11 @@ import argparse
 from tqdm import tqdm
 from logger import Logger
 from datetime import datetime
+import PIL
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--lr', type=float, default=1e-3)
-parser.add_argument('--momentum', type=float, default=9e-1)
+parser.add_argument('--momentum', type=float, default=99e-2)
 parser.add_argument('--train_dir', type=str, default='dataset/tiny-imagenet-200/train')
 parser.add_argument('--val_dir', type=str, default='dataset/tiny-imagenet-200/val_out')
 parser.add_argument('--batch_size', type=int, default=8)
@@ -30,6 +31,7 @@ normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
 
 train_set = datasets.ImageFolder(args.train_dir,
                                 transforms.Compose([
+                                    transforms.RandomRotation(15, PIL.Image.BILINEAR),
                                     transforms.RandomResizedCrop(224, scale=[.64,1]),
                                     transforms.RandomHorizontalFlip(),
                                     transforms.ToTensor(),
