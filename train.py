@@ -124,7 +124,6 @@ def train_and_val(model:nn.Module, optim:torch.optim.Optimizer, criterion:nn.Mod
             logger.record('train_acc1', acc1[0].item())
             logger.record('train_acc5', acc5[0].item())
             logger.increment_iteration()
-        scheduler.step(losses.avg)
 
     for epoch in range(args.epochs):
         losses = AverageMeter()
@@ -157,5 +156,6 @@ def validate(model:nn.Module, criterion:nn.Module, loader:DataLoader):
         logger.record('val_loss', float(losses.avg))
         logger.record('val_acc1', float(top1.avg))
         logger.record('val_acc5', float(top5.avg))
+    scheduler.step(losses.avg)
 
 train_and_val(model, optim, criterion, train_loader)
