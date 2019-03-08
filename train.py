@@ -24,6 +24,7 @@ args = parser.parse_args()
 
 model = models.resnet18().to(args.device)
 optim = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
+scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optim, 'min', factor=0.5)
 
 normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225])
@@ -123,6 +124,7 @@ def train_and_val(model:nn.Module, optim:torch.optim.Optimizer, criterion:nn.Mod
             logger.record('train_acc1', acc1[0].item())
             logger.record('train_acc5', acc5[0].item())
             logger.increment_iteration()
+        scheduler.step(losses.avg)
 
     for epoch in range(args.epochs):
         losses = AverageMeter()
