@@ -22,7 +22,7 @@ parser.add_argument('--name', type=str, default=str(datetime.now()))
 
 args = parser.parse_args()
 
-model = models.resnet18().to(args.device)
+model = models.resnet34().to(args.device)
 optim = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optim, 'min', factor=0.5)
 
