@@ -7,7 +7,6 @@ import argparse
 from tqdm import tqdm
 from logger import Logger
 from datetime import datetime
-import PIL
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--lr', type=float, default=1e-3)
@@ -31,7 +30,6 @@ normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
 
 train_set = datasets.ImageFolder(args.train_dir,
                                 transforms.Compose([
-                                    transforms.RandomRotation(15, PIL.Image.BILINEAR),
                                     transforms.RandomResizedCrop(224, scale=[.64,1]),
                                     transforms.RandomHorizontalFlip(),
                                     transforms.ToTensor(),
