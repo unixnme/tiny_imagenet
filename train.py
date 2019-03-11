@@ -8,6 +8,7 @@ from tqdm import tqdm
 from logger import Logger
 from datetime import datetime
 from client.client import Client
+import numpy as np
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--lr', type=float, default=1e-3)
@@ -97,10 +98,22 @@ def accuracy(output, target, topk=(1,)):
             res.append(correct_k.mul_(100.0 / batch_size))
     return res
 
+def random_freeze(model:nn.Module, fraction:float=0.5):
+    '''
+    freeze fraction of layers in the model by random
+    '''
+    for param in model.parameters():
+        if np.random.randint(2) == 0:
+            param.requires_grad = False
+        else:
+            param.requires_grad = True
+
 def train_and_val(model:nn.Module, optim:torch.optim.Optimizer, criterion:nn.Module, loader:DataLoader):
     def train_epoch():
         model.train(False)
         for i, (x,y) in enumerate(tqdm(loader)):
+            random_freeze(model)
+
             x,y = x.to(args.device), y.to(args.device)
             pred = model(x)
             loss = criterion(pred, y)
