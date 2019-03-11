@@ -63,7 +63,7 @@ keys = ["train_loss", "train_acc1", "train_acc5"]
 keys += ["val_loss", "val_acc1", "val_acc5"]
 logger = Logger(keys, args.name)
 
-client = Client()
+client = Client(host='192.168.0.202')
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""
