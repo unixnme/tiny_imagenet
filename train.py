@@ -112,7 +112,7 @@ def train_and_val(model:nn.Module, optim:torch.optim.Optimizer, criterion:nn.Mod
     def train_epoch():
         model.train(False)
         for i, (x,y) in enumerate(tqdm(loader)):
-            random_freeze(model)
+            #random_freeze(model)
 
             x,y = x.to(args.device), y.to(args.device)
             pred = model(x)
@@ -174,6 +174,7 @@ def validate(model:nn.Module, criterion:nn.Module, loader:DataLoader):
         logger.record('val_acc5', float(top5.avg))
 
     scheduler.step(losses.avg)
+    client.send(args.name)
     client.send(' * Loss {loss.avg:.4f} Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'
               .format(loss=losses, top1=top1, top5=top5))
 
