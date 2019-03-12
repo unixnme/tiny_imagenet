@@ -25,6 +25,10 @@ parser.add_argument('--name', type=str, default=str(datetime.now()))
 args = parser.parse_args()
 
 model = models.resnet50().to(args.device)
+for layer in model.modules():
+    if isinstance(layer, nn.BatchNorm2d):
+        layer.affine = False
+
 optim = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optim, 'min', factor=0.5)
 
