@@ -25,9 +25,11 @@ parser.add_argument('--name', type=str, default=str(datetime.now()))
 args = parser.parse_args()
 
 model = models.resnet50().to(args.device)
+'''
 for layer in model.modules():
     if isinstance(layer, nn.BatchNorm2d):
         layer.affine = False
+'''
 
 optim = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optim, 'min', factor=0.5)
@@ -114,9 +116,9 @@ def random_freeze(model:nn.Module, fraction:float=0.5):
 
 def train_and_val(model:nn.Module, optim:torch.optim.Optimizer, criterion:nn.Module, loader:DataLoader):
     def train_epoch():
-        model.train(False)
+        model.train()
         for i, (x,y) in enumerate(tqdm(loader)):
-            #random_freeze(model)
+            random_freeze(model)
 
             x,y = x.to(args.device), y.to(args.device)
             pred = model(x)
